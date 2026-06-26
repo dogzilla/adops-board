@@ -88,6 +88,7 @@
             flex: 1;
             overflow-x: auto;
             overflow-y: hidden;
+            min-height: 0;
             padding: 24px;
             display: flex;
             gap: 16px;
@@ -98,6 +99,7 @@
             width: 320px;
             flex-shrink: 0;
             min-height: 0;
+            height: 100%;
             background: #ffffff;
             border: 1px solid #e0e0e0;
             border-radius: 12px;
@@ -829,8 +831,11 @@
         refreshBoard();
     }
 
+    let deletedColumnIds = [];
+
     function openColumnAdmin() {
         columnAdminData = JSON.parse(JSON.stringify(boardData.columns));
+        deletedColumnIds = [];
         renderColumnAdmin();
         document.getElementById('columnModal').classList.remove('hidden');
     }
@@ -853,12 +858,26 @@
 
     function removeColumn(index) {
         if (!confirm('Delete this column and all its cards?')) return;
+        const col = columnAdminData[index];
+        if (col.id) {
+            deletedColumnIds.push(col.id);
+        }
         columnAdminData.splice(index, 1);
         renderColumnAdmin();
     }
 
     async function saveColumns() {
         const headers = { 'Authorization': 'Bearer ' + API_KEY, 'Content-Type': 'application/json' };
+
+        // Delete removed columns first
+        for (const colId of deletedColumnIds) {
+            await fetch('/api/v1/columns/' + colId, {
+                method: 'DELETE',
+                headers: headers
+            });
+        }
+        deletedColumnIds = [];
+
         for (let i = 0; i < columnAdminData.length; i++) {
             const col = columnAdminData[i];
             if (col.name.trim()) {
