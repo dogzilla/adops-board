@@ -7,7 +7,7 @@ The AdXact AdOps Board is a Kanban-style project management system with REST API
 All **write operations** (POST, PATCH, DELETE) require API key authentication via Bearer token:
 
 ```
-Authorization: Bearer ***
+Authorization: Bearer kanban-secret-key
 ```
 
 **Exception:** `PATCH /api/v1/items/{item_id}` does not require authentication.
@@ -37,7 +37,7 @@ Retrieve the full board state including columns, cards (buckets), and subtasks (
 #### POST /api/v1/setup
 Initialize default columns ("To Do", "In Progress", "Done") if board is empty.
 
-**Headers:** `Authorization: Bearer ***`
+**Headers:** `Authorization: Bearer kanban-secret-key
 
 **Response:**
 ```json
@@ -52,7 +52,7 @@ Initialize default columns ("To Do", "In Progress", "Done") if board is empty.
 #### POST /api/v1/columns
 Create a new column.
 
-**Headers:** `Authorization: Bearer ***`
+**Headers:** `Authorization: Bearer kanban-secret-key
 
 **Body:**
 ```json
@@ -74,7 +74,7 @@ Create a new column.
 #### PATCH /api/v1/columns/{column_id}
 Update column name or sort order.
 
-**Headers:** `Authorization: Bearer ***`
+**Headers:** `Authorization: Bearer kanban-secret-key
 
 **Body:**
 ```json
@@ -89,14 +89,12 @@ Update column name or sort order.
 #### DELETE /api/v1/columns/{column_id}
 Delete a column and all its cards (buckets) and subtasks (items).
 
-**Headers:** `Authorization: Bearer ***`
-
-### Card (Bucket) Operations
+**Headers:** `Authorization: Bearer kanban-secret-key Card (Bucket) Operations
 
 #### POST /api/v1/buckets
 Create a new card (bucket).
 
-**Headers:** `Authorization: Bearer ***`
+**Headers:** `Authorization: Bearer kanban-secret-key
 
 **Body:**
 ```json
@@ -124,7 +122,7 @@ Create a new card (bucket).
 #### PATCH /api/v1/buckets/{bucket_id}
 Update card (bucket) details. All fields are optional.
 
-**Headers:** `Authorization: Bearer ***`
+**Headers:** `Authorization: Bearer kanban-secret-key
 
 **Body:**
 ```json
@@ -143,7 +141,7 @@ Update card (bucket) details. All fields are optional.
 #### POST /api/v1/buckets/{bucket_id}/move
 Move a card to a different column.
 
-**Headers:** `Authorization: Bearer ***`
+**Headers:** `Authorization: Bearer kanban-secret-key
 
 **Body:**
 ```json
@@ -164,7 +162,7 @@ Move a card to a different column.
 #### DELETE /api/v1/buckets/{bucket_id}
 Delete a card (bucket) and all its subtasks (items).
 
-**Headers:** `Authorization: Bearer ***`
+**Headers:** `Authorization: Bearer kanban-secret-key
 
 **Response:**
 ```json
@@ -178,7 +176,7 @@ Delete a card (bucket) and all its subtasks (items).
 #### POST /api/v1/items
 Create a subtask (item) within a card.
 
-**Headers:** `Authorization: Bearer ***`
+**Headers:** `Authorization: Bearer kanban-secret-key
 
 **Body:**
 ```json
@@ -232,7 +230,7 @@ Update subtask - toggle `done`, change text, or update fields. **No auth require
 #### DELETE /api/v1/items/{item_id}
 Delete a subtask (item).
 
-**Headers:** `Authorization: Bearer ***`
+**Headers:** `Authorization: Bearer kanban-secret-key
 
 **Response:**
 ```json
@@ -320,39 +318,35 @@ curl http://localhost:8889/api/v1/boards
 
 # Create card
 curl -X POST http://localhost:8889/api/v1/buckets \
-  -H "Authorization: Bearer *** \
+  -H "Authorization: Bearer kanban-secret-key \
   -H "Content-Type: application/json" \
-  -d "{"column_id": 1, "name": "Test Card", "assigned_to": "Israel Alvarez"}"
+  -d '{"column_id": 1, "name": "Test Card", "assigned_to": "Israel Alvarez"}'
 
 # Move card
 curl -X POST http://localhost:8889/api/v1/buckets/30/move \
-  -H "Authorization: Bearer *** \
+  -H "Authorization: Bearer kanban-secret-key \
   -H "Content-Type: application/json" \
-  -d "{"column_id": 2}"
+  -d '{"column_id": 2}'
 
 # Toggle subtask (no auth needed)
 curl -X PATCH http://localhost:8889/api/v1/items/120 \
   -H "Content-Type: application/json" \
-  -d "{"done": true}"
+  -d '{"done": true}'
 
 # Create subtask
 curl -X POST http://localhost:8889/api/v1/items \
-  -H "Authorization: Bearer *** \
+  -H "Authorization: Bearer kanban-secret-key \
   -H "Content-Type: application/json" \
-  -d "{"bucket_id": 30, "text": "Subtask", "done": false}"
+  -d '{"bucket_id": 30, "text": "Subtask", "done": false}'
 
 # Export board (excluding completed cards)
 curl http://localhost:8889/api/v1/export?completed=false
 
 # Delete card
 curl -X DELETE http://localhost:8889/api/v1/buckets/30 \
-  -H "Authorization: Bearer ***`
-
-# Delete subtask
+  -H "Authorization: Bearer kanban-secret-key Delete subtask
 curl -X DELETE http://localhost:8889/api/v1/items/120 \
-  -H "Authorization: Bearer ***`
-```
-
+  -H "Authorization: Bearer kanban-secret-key
 ## Notes
 - Cards are draggable between columns via the card header
 - Subtasks auto-generate `date_created` on creation and `date_completed` when marked done
