@@ -143,7 +143,7 @@
             background: #ffffff;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             cursor: pointer;
             transition: box-shadow 0.2s;
             overflow: hidden;
@@ -157,7 +157,7 @@
         .card-header {
             display: flex;
             align-items: center;
-            padding: 12px;
+            padding: 8px;
             background: #f97316;
             color: #ffffff;
         }
@@ -185,13 +185,15 @@
             flex: 1;
         }
         .card-body {
-            padding: 12px;
+            padding: 8px;
         }
         .card-meta {
             display: flex;
+            align-items: center;
             flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 8px;
+            gap: 8px;
+            margin-bottom: 6px;
+            font-size: 12px;
         }
         .meta-badge {
             font-size: 11px;
@@ -211,10 +213,42 @@
             background: #e8f0fe;
             color: #1a73e8;
         }
-        .card-description {
-            font-size: 13px;
+        .progress-bar {
+            width: 60px;
+            height: 6px;
+            background: #edeef0;
+            border-radius: 3px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: #f97316;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        .task-count-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 11px;
             color: #584237;
-            margin-bottom: 8px;
+            background: #f3f4f6;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+            margin-left: auto;
+        }
+        .card-description {
+            font-size: 12px;
+            color: #584237;
+            margin-bottom: 6px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .subtask-item {
             display: flex;
@@ -727,15 +761,20 @@
             html += '</div>';
             html += '<div class="column-cards" ondragover="handleDragOver(event)" ondrop="handleDrop(event, ' + col.id + ')" ondragleave="handleDragLeave(event)">';
 
-            colBuckets.forEach(b => {
+              colBuckets.forEach(b => {
                 const items = boardData.items.filter(i => i.bucket_id === b.id);
                 const activeItems = items.filter(i => !i.done);
-                const displayText = b.description || (activeItems.length > 0 ? activeItems[0].text.substring(0, 80) : 'No subtasks');
-                const isTruncated = b.description ? false : activeItems.length > 0 && activeItems[0].text.length > 80;
-
-                const totalItems = items.length;
-                const doneItems = items.filter(i => i.done).length;
-                const progress = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0;
+                const totalCount = items.length;
+                const doneCount = items.filter(i => i.done).length;
+                const progress = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+                
+                // Truncate description to 200 chars for card display
+                let displayDesc = b.description || '';
+                if (!displayDesc && activeItems.length > 0) {
+                    displayDesc = activeItems[0].text;
+                }
+                const isTruncated = displayDesc.length > 200;
+                const displayText = displayDesc.length > 200 ? displayDesc.substring(0, 200) + '...' : displayDesc;
 
                 html += '<div class="card" draggable="true" data-bucket-id="' + b.id + '" ondragstart="handleDragStart(event, ' + b.id + ')" ondragend="handleDragEnd(event)" onclick="editCard(' + b.id + ')">';
                 html += '<div class="card-header">';
@@ -749,33 +788,23 @@
                 }
                 html += '</div>';
                 html += '<div class="card-body">';
-                if (b.start_date || b.due_date || b.assigned_to) {
-                    html += '<div class="card-meta">';
-                }
-                if (b.start_date) html += '<span class="meta-badge meta-date">' + b.start_date + '</span>';
+                
+                // Meta line: assignee, due date, progress bar
+                html += '<div class="card-meta">';
+                if (b.assigned_to) html += '<span class="meta-badge meta-assignee">' + escHtml(b.assigned_to) + '</span>';
                 if (b.due_date) {
                     const isOverdue = new Date(b.due_date) < new Date();
                     html += '<span class="meta-badge ' + (isOverdue ? 'meta-overdue' : 'meta-date') + '">' + b.due_date + '</span>';
                 }
-                if (b.assigned_to) html += '<span class="meta-badge meta-assignee">' + escHtml(b.assigned_to) + '</span>';
-                if (b.start_date || b.due_date || b.assigned_to) html += '</div>';
-
-                html += '<p class="card-description">' + escHtml(displayText) + (isTruncated ? '...' : '') + '</p>';
-
-                if (activeItems.length > 0) {
-                    html += '<div class="subtask-list">';
-                    activeItems.slice(0, 3).forEach(item => {
-                        html += '<div class="subtask-item' + (item.done ? ' completed' : '') + '">';
-                        html += '<input type="checkbox" ' + (item.done ? 'checked' : '') + ' disabled class="subtask-checkbox">';
-                        html += '<span class="subtask-text">' + escHtml(item.text) + '</span>';
-                        html += '<div class="subtask-dates">';
-                        if (item.date_created) html += '<span class="subtask-created">created ' + item.date_created.split(' ')[0] + '</span>';
-                        if (item.date_completed) html += '<span class="subtask-completed">&#x2713; ' + item.date_completed.split(' ')[0] + '</span>';
-                        html += '</div>';
-                        html += '</div>';
-                    });
-                    if (activeItems.length > 3) html += '<div style="font-size: 11px; color: #8c7164; padding: 4px 0;">+' + (activeItems.length - 3) + ' more</div>';
-                    html += '</div>';
+                // Progress bar
+                html += '<div class="progress-bar"><div class="progress-bar-fill" style="width:' + progress + '%"></div></div>';
+                // Task count badge
+                html += '<span class="task-count-badge">' + doneCount + '/' + totalCount + '</span>';
+                html += '</div>';
+                
+                // Description (truncated)
+                if (displayText) {
+                    html += '<p class="card-description">' + escHtml(displayText) + (isTruncated ? '...' : '') + '</p>';
                 }
                 html += '</div></div>';
             });
