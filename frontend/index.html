@@ -588,7 +588,7 @@
         }
 
         let html = '';
-        boardData.columns.forEach(col => {
+        boardData.columns.sort((a, b) => a.sort_order - b.sort_order).forEach(col => {
             const colBuckets = boardData.buckets.filter(b => b.column_id === col.id);
 
             html += '<div class="column" data-column-id="' + col.id + '">';
@@ -740,7 +740,7 @@
     function populateColumnSelect(selectedId) {
         const select = document.getElementById('cardColumn');
         select.innerHTML = '';
-        boardData.columns.forEach(col => {
+        boardData.columns.sort((a, b) => a.sort_order - b.sort_order).forEach(col => {
             const option = document.createElement('option');
             option.value = col.id;
             option.text = col.name;
