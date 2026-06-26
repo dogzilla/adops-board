@@ -57,7 +57,7 @@ Authorization: Bearer kanban-secret-key
 
 ```bash
 curl -X POST http://localhost:8889/api/v1/buckets \
-  -H "Authorization: Bearer kanban-secret-key" \
+  -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"column_id": 1, "name": "New Card", "assigned_to": "John Doe"}'
 ```
@@ -66,7 +66,7 @@ curl -X POST http://localhost:8889/api/v1/buckets \
 
 ```bash
 curl -X POST http://localhost:8889/api/v1/buckets/1/move \
-  -H "Authorization: Bearer kanban-secret-key" \
+  -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"column_id": 2}'
 ```
