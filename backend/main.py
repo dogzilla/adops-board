@@ -7,7 +7,7 @@ from datetime import datetime, date
 from typing import List, Optional, Dict, Any
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Request
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Request, Body
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
@@ -39,6 +39,7 @@ class Bucket(SQLModel, table=True):
     name: str  # Card title
     description: str = ""  # Summary for collapsed view
     sort_order: int = 0
+    assigned_to: Optional[str] = None
 
 class Item(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -191,10 +192,14 @@ async def delete_column(column_id: int, agent: Request = Depends(verify_agent)):
 @app.post("/api/v1/buckets")
 async def create_bucket(data: dict, agent: Request = Depends(verify_agent)):
     with Session(engine) as session:
-        col = session.get(Column, data["column_id"])
+        col = session.get(Column, data.get("column_id"))
         if not col: raise HTTPException(404, "Column not found")
         
-        bucket = Bucket(column_id=data["column_id"], name=data["name"], description=data.get("description", ""), sort_order=999)
+        name = data.get("name", "Untitled")
+        description = data.get("description", "")
+        assigned_to = data.get("assigned_to")
+        
+        bucket = Bucket(column_id=data["column_id"], name=name, description=description, sort_order=999, assigned_to=assigned_to)
         session.add(bucket)
         session.commit()
         
@@ -202,7 +207,7 @@ async def create_bucket(data: dict, agent: Request = Depends(verify_agent)):
         return bucket.dict()
 
 @app.patch("/api/v1/buckets/{bucket_id}")
-async def update_bucket(bucket_id: int, data: dict, agent: Request = Depends(verify_agent)):
+async def update_bucket(bucket_id: int, data: dict = Body(default_factory=dict), agent: Request = Depends(verify_agent)):
     with Session(engine) as session:
         bucket = session.get(Bucket, bucket_id)
         if not bucket: raise HTTPException(404, "Bucket not found")
